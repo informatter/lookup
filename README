@@ -1,0 +1,12 @@
+# Lookup 🔍
+
+Custom Hash table implementation in Python 🐍 just  for fun, but also to understand a little deeper the different types of implementations that can be done for
+resizing and collision handling 🤖 Who knows, perhaps I will end up implementing a basic Cache system lets see 🤷
+
+In the future I would also like to implement it in Golang as an excuse to start learning the language 🚀
+
+All the coding sessions will be reorded live 🎥 and uploaded to [nicodes](https://www.youtube.com/channel/UCKGZLR6ETz-Z3e1hzkuy2Ig)
+
+### Initial Resources
+- https://en.wikipedia.org/wiki/Hash_function
+- https://en.wikipedia.org/wiki/Hash_table
