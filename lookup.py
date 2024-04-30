@@ -69,7 +69,7 @@ class Lookup:
         delta_location = None
         collision_count+=1
         
-        # location is full - start probing!
+        #start probing!
 
         while home_location != delta_location:
             delta_location = self.hash(key,collision_count)
@@ -112,7 +112,6 @@ class Lookup:
         collision_count+=1
         
         # start probing!
-        # when load factor approaches 1 or is 1 search is O(n)
 
         while home_location != delta_location:
             delta_location = self.hash(key,collision_count)
@@ -154,8 +153,6 @@ class Lookup:
         collision_count+=1
 
         # start probing!
-        # when load factor approaches 1 or is 1 search is O(n)
-
         while home_location != delta_location:
             delta_location = self.hash(key,collision_count)
             data:None|Data = self.buckets[delta_location]
