@@ -19,7 +19,7 @@ All the coding sessions will be recorded live 🎥 and uploaded to [nicodes](htt
     - https://en.m.wikipedia.org/wiki/Double_hashing
 
 ### Tests
-- Run unit tests: `pyests`
+- Run unit tests: `pytest`
 - Run stress test: `python main.py`
 
 
