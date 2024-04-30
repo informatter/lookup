@@ -10,13 +10,18 @@ All the coding sessions will be recorded live 🎥 and uploaded to [nicodes](htt
 ### Initial Resources
 - https://en.wikipedia.org/wiki/Hash_function
 - https://en.wikipedia.org/wiki/Hash_table
-- **Collision handling**
+- **Collision handling - open addressing**
     - https://github.com/aliaamohamedali/Algorithms/blob/master/introduction-to-algorithms-3rd-edition.pdf (Chapter 11 Hash tables)
     - https://courses.csail.mit.edu/6.006/fall11/lectures/lecture10.pdf
     - https://webdocs.cs.ualberta.ca/~holte/T26/open-addr.html
     - https://en.m.wikipedia.org/wiki/Linear_probing
     - https://en.m.wikipedia.org/wiki/Quadratic_probing
     - https://en.m.wikipedia.org/wiki/Double_hashing
+
+### Tests
+- Run unit tests: `pyests`
+- Run stress test: `python main.py`
+
 
 
 ### TODO
