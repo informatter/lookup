@@ -3,6 +3,9 @@ from typing import Any
 from typing import List
 
 
+LOAD_FACTOR_THRESHOLD=0.75
+
+
 @dataclass
 class Data:
     def __init__(self,key:Any, value:Any,is_deleted:bool=False):
@@ -15,18 +18,14 @@ class Data:
         return str(self)
     
 
-
-
 class Lookup:
-
-    def __init__(self, length:int=10):
+    def __init__(self, length:int=11):
         self.length:int = length
         self.buckets:List[Data | None] = [None for _ in range(self.length)]
         self.size = 0
-        # TODO Calculate load factor: 𝛼 = n / m, where n are total items and m is table size -> should be kept < 0.75
 
     
-    def __hash(self,key:Any, collision_count:int)->int:
+    def hash(self,key:Any, collision_count:int = 0)->int:
         """
         Hashes the key based on the Integer universe assumption using the hashing by division technique
         """
@@ -34,23 +33,36 @@ class Lookup:
         hash_1 = key_hash % self.length
         hash_2 = 1 + (key_hash % (self.length - 1))
         return (hash_1 + collision_count * hash_2) % self.length
-
-
     
 
+    def __compute_load_factor(self) ->float:
+        """
+        """
+        # Load factor: 𝛼 = n / m
+        return self.size / self.length
+
+
     def __resize(self):
-        #TODO
-        pass
+        # V1 -> TODO needs optimization
+        self.length  = self.length*2
+        self.size = 0
+        new_buckets = [None for _ in range(self.length)]
+        
+        for item in self.buckets:
+            if item is None or item.is_deleted: continue
 
+            self.__insert(new_buckets,item.key,item.value)
+        
+        self.buckets = new_buckets
 
-    def insert(self, key:Any, value:Any) -> None:
-
-
+    
+    def __insert(self,buckets:List[Data|None], key:Any, value:Any):
+    
         collision_count = 0
-        home_location = self.__hash(key,collision_count)
+        home_location = self.hash(key,collision_count)
 
-        if self.buckets[home_location] is None:
-            self.buckets[home_location] = Data(key,value)
+        if buckets[home_location] is None:
+            buckets[home_location] = Data(key,value)
             self.size+=1
             return
 
@@ -60,14 +72,20 @@ class Lookup:
         # location is full - start probing!
 
         while home_location != delta_location:
-            delta_location = self.__hash(key,collision_count)
-            if self.buckets[delta_location] is None:
-                self.buckets[delta_location] = Data(key,value)
+            delta_location = self.hash(key,collision_count)
+            if buckets[delta_location] is None:
+                buckets[delta_location] = Data(key,value)
                 self.size+=1
                 return
             collision_count+=1
-        
-        # TODO handle when insertion can't happen -> resize table is full!
+
+    def insert(self, key:Any, value:Any) -> None:
+
+        load_factor:float = self.__compute_load_factor()
+        if load_factor >= LOAD_FACTOR_THRESHOLD:
+            self.__resize()
+
+        self.__insert(self.buckets,key,value)
 
 
     def search (self, key:Any)-> Any | None:
@@ -80,7 +98,7 @@ class Lookup:
         """
 
         collision_count = 0
-        home_location = self.__hash(key,collision_count)
+        home_location = self.hash(key,collision_count)
         data:None|Data = self.buckets[home_location]
 
         if data is None:
@@ -97,7 +115,7 @@ class Lookup:
         # when load factor approaches 1 or is 1 search is O(n)
 
         while home_location != delta_location:
-            delta_location = self.__hash(key,collision_count)
+            delta_location = self.hash(key,collision_count)
             data:None|Data = self.buckets[delta_location]
             if data is None:
                 return None
@@ -117,12 +135,8 @@ class Lookup:
         `True` if the deletion succeeded; otherwise `False`
         """
 
-        # [{'key': 5, 'value': 'a'}, {'key': 11, 'value': 'a'}, {'key': 3, 'value': 'a'}, {'key': 10, 'value': 'a'}, {'key': 4, 'value': 'a'}]
-
-        # [{'key': 5, 'value': 'a'}, {'key': 11, 'value': 'a'}, {'key': 3, 'value': 'a'},        __None               , {'key': 4, 'value': 'a'}]
-
         collision_count = 0
-        home_location = self.__hash(key,collision_count)
+        home_location = self.hash(key,collision_count)
         data:None|Data = self.buckets[home_location]
 
         if data is None:
@@ -143,7 +157,7 @@ class Lookup:
         # when load factor approaches 1 or is 1 search is O(n)
 
         while home_location != delta_location:
-            delta_location = self.__hash(key,collision_count)
+            delta_location = self.hash(key,collision_count)
             data:None|Data = self.buckets[delta_location]
             if data is None:
                 return False
