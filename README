@@ -17,3 +17,10 @@ All the coding sessions will be recorded live 🎥 and uploaded to [nicodes](htt
     - https://en.m.wikipedia.org/wiki/Linear_probing
     - https://en.m.wikipedia.org/wiki/Quadratic_probing
     - https://en.m.wikipedia.org/wiki/Double_hashing
+
+
+### TODO
+- Improve resize logic
+- How does it handle concurrency?
+- Turn in to cache?
+- Make a Go version 
