@@ -56,7 +56,7 @@ class Lookup:
         self.buckets = new_buckets
 
     
-    def __insert(self,buckets:List[Data|None], key:Any, value:Any):
+    def __insert(self,buckets:List[Data|None], key:Any, value:Any) -> None:
     
         collision_count = 0
         home_location = self.hash(key,collision_count)
@@ -65,6 +65,11 @@ class Lookup:
             buckets[home_location] = Data(key,value)
             self.size+=1
             return
+        
+        if buckets[home_location] is not None and buckets[home_location].key == key:
+            buckets[home_location].value = value
+            return
+        
 
         delta_location = None
         collision_count+=1
@@ -73,11 +78,18 @@ class Lookup:
 
         while home_location != delta_location:
             delta_location = self.hash(key,collision_count)
+
+            # if an item with the same key is being inserted, override its value
+            if buckets[delta_location] is not None and buckets[delta_location].key == key:
+                buckets[delta_location].value = value
+                return
+
             if buckets[delta_location] is None:
                 buckets[delta_location] = Data(key,value)
                 self.size+=1
                 return
             collision_count+=1
+        
 
     def insert(self, key:Any, value:Any) -> None:
 
