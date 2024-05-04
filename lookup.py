@@ -43,7 +43,10 @@ class Lookup:
 
 
     def __resize(self):
-        # V1 -> TODO needs optimization
+        """
+        Resizes the table by only hashing entries which have not been marked as deleted.
+        It only creates the new table with active entries.
+        """
         self.length  = self.length*2
         self.size = 0
         new_buckets = [None for _ in range(self.length)]
