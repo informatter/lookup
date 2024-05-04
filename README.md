@@ -7,7 +7,7 @@ In the future I would also like to implement it in Golang as an excuse to start 
 
 All the coding sessions will be recorded live 🎥 and uploaded to [nicodes](https://www.youtube.com/channel/UCKGZLR6ETz-Z3e1hzkuy2Ig)
 
-### Initial Resources
+## Initial Resources 📖
 - https://en.wikipedia.org/wiki/Hash_function
 - https://en.wikipedia.org/wiki/Hash_table
 - **Collision handling - open addressing**
@@ -18,13 +18,36 @@ All the coding sessions will be recorded live 🎥 and uploaded to [nicodes](htt
     - https://en.m.wikipedia.org/wiki/Quadratic_probing
     - https://en.m.wikipedia.org/wiki/Double_hashing
 
-### Tests
-- Run unit tests: `pytest`
-- Run stress test: `python main.py`
+
+## Install dependencies
+
+The only dependency used is **pytest**
+
+`pip install -r requirements.txt`
+
+## Tests 🧪
+
+**Activate virtual environment**
+
+Windows 🪟
+
+`env/scripts/activate.ps1`
+
+macOS 🍎 / Linux 🐧
+
+`source env/bin/activate`
+
+**Run tests**
+
+Unit tests: 
+- `pytest`
+
+Stress test: 
+- `python main.py`
 
 
 
-### TODO
+## TODO
 - Improve resize logic
 - How does it handle concurrency?
 - Turn in to cache?
