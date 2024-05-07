@@ -39,8 +39,12 @@ macOS 🍎 / Linux 🐧
 
 **Run tests**
 
-Unit tests: 
-- `pytest`
+
+To run all unit tests: 
+- `pytest` to include print statements : `pytest -s`
+
+To run a specific test:
+- `pytest tests/test_lookup.py::test_resize_up`
 
 Stress test: 
 - `python main.py`
@@ -48,7 +52,8 @@ Stress test:
 
 
 ## TODO
-- Improve resize logic
-- How does it handle concurrency?
 - Turn in to cache?
+- API?
+- CLI client?
+- How does it handle concurrency?
 - Make a Go version 

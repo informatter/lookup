@@ -3,17 +3,18 @@ from typing import Any
 from typing import List
 
 
-LOAD_FACTOR_THRESHOLD=0.75
+RESIZE_UP_THRESHOLD=0.60
+RESIZE_DOWN_THRESHOLD = 0.12
 
 
 @dataclass
 class Data:
-    def __init__(self,key:Any, value:Any,is_deleted:bool=False):
+    def __init__(self,key:Any, value:Any,is_soft_deleted:bool=False):
         self.key = key
         self.value=value
-        self.is_deleted  = is_deleted
+        self.is_soft_deleted  = is_soft_deleted
     def __str__(self):
-        return f'key: {self.key}, value: {self.value}, is_deleted:{self.is_deleted}'
+        return f'key: {self.key}, value: {self.value}, is_soft_deleted:{self.is_soft_deleted}'
     def __repr__(self):
         return str(self)
     
@@ -21,8 +22,9 @@ class Data:
 class Lookup:
     def __init__(self, length:int=11):
         self.length:int = length
-        self.buckets:List[Data | None] = [None for _ in range(self.length)]
-        self.size = 0
+        self._slots:List[Data | None] = [None for _ in range(self.length)]
+        self._active_slot_counter = 0 #  only keeps track active slots - soft deleted will not be counted
+        self._occupied_slot_counter = 0 # keeps track of all occupied slots - both active and soft deleted
 
     
     def hash(self,key:Any, collision_count:int = 0)->int:
@@ -39,24 +41,24 @@ class Lookup:
         """
         """
         # Load factor: 𝛼 = n / m
-        return self.size / self.length
+        return self._occupied_slot_counter / self.length
 
 
-    def __resize(self):
+    def __resize(self, new_size:int):
         """
         Resizes the table by only hashing entries which have not been marked as deleted.
         It only creates the new table with active entries.
         """
-        self.length  = self.length*2
-        self.size = 0
-        new_buckets = [None for _ in range(self.length)]
+        self.length  = new_size
+        self._active_slot_counter = 0
+        new_slots = [None for _ in range(self.length)]
         
-        for item in self.buckets:
-            if item is None or item.is_deleted: continue
+        for item in self._slots:
+            if item is None or item.is_soft_deleted: continue
 
-            self.__insert(new_buckets,item.key,item.value)
+            self.__insert(new_slots,item.key,item.value)
         
-        self.buckets = new_buckets
+        self._slots = new_slots
 
     
     def __insert(self,buckets:List[Data|None], key:Any, value:Any) -> None:
@@ -66,7 +68,8 @@ class Lookup:
 
         if buckets[home_location] is None:
             buckets[home_location] = Data(key,value)
-            self.size+=1
+            self._active_slot_counter+=1
+            self._occupied_slot_counter+=1
             return
         
         if buckets[home_location] is not None and buckets[home_location].key == key:
@@ -89,18 +92,29 @@ class Lookup:
 
             if buckets[delta_location] is None:
                 buckets[delta_location] = Data(key,value)
-                self.size+=1
+                self._active_slot_counter+=1
+                self._occupied_slot_counter+=1
                 return
             collision_count+=1
+
+    
+    def get_size(self):
+        return self._active_slot_counter
+
+    def get_slots(self):
+        return self._slots
+    
+    def get_load_factor(self):
+        return self.__compute_load_factor()
         
 
     def insert(self, key:Any, value:Any) -> None:
 
         load_factor:float = self.__compute_load_factor()
-        if load_factor >= LOAD_FACTOR_THRESHOLD:
-            self.__resize()
+        if load_factor >= RESIZE_UP_THRESHOLD:
+            self.__resize(self.length*2)
 
-        self.__insert(self.buckets,key,value)
+        self.__insert(self._slots,key,value)
 
 
     def search (self, key:Any)-> Any | None:
@@ -114,12 +128,12 @@ class Lookup:
 
         collision_count = 0
         home_location = self.hash(key,collision_count)
-        data:None|Data = self.buckets[home_location]
+        data:None|Data = self._slots[home_location]
 
         if data is None:
             return None
 
-        if data is not None and data.key == key and data.is_deleted is False:
+        if data is not None and data.key == key and data.is_soft_deleted is False:
             return data.value
         
     
@@ -130,10 +144,10 @@ class Lookup:
 
         while home_location != delta_location:
             delta_location = self.hash(key,collision_count)
-            data:None|Data = self.buckets[delta_location]
+            data:None|Data = self._slots[delta_location]
             if data is None:
                 return None
-            if data is not None and data.key == key and data.is_deleted is False:
+            if data is not None and data.key == key and data.is_soft_deleted is False:
                 return data.value
             collision_count+=1
         
@@ -148,20 +162,23 @@ class Lookup:
         -------
         `True` if the deletion succeeded; otherwise `False`
         """
-
+        load_factor:float = self.__compute_load_factor()
+        new_size = self.length // 2
         collision_count = 0
         home_location = self.hash(key,collision_count)
-        data:None|Data = self.buckets[home_location]
+        data:None|Data = self._slots[home_location]
 
         if data is None:
             return False
         
-        if data is not None and data.key == key and data.is_deleted:
+        if data is not None and data.key == key and data.is_soft_deleted:
             return False
         
-        if data is not None and data.key == key and data.is_deleted is False:
-            data.is_deleted = True
-            self.size-=1
+        if data is not None and data.key == key and data.is_soft_deleted is False:
+            data.is_soft_deleted = True
+            self._active_slot_counter-=1
+            if load_factor <= RESIZE_DOWN_THRESHOLD:
+                self.__resize(new_size)
             return True
         
         delta_location = None
@@ -170,12 +187,14 @@ class Lookup:
         # start probing!
         while home_location != delta_location:
             delta_location = self.hash(key,collision_count)
-            data:None|Data = self.buckets[delta_location]
+            data:None|Data = self._slots[delta_location]
             if data is None:
                 return False
-            if data is not None and data.key == key and data.is_deleted is False:
-                data.is_deleted = True
-                self.size-=1
+            if data is not None and data.key == key and data.is_soft_deleted is False:
+                data.is_soft_deleted = True
+                self._active_slot_counter-=1
+                if load_factor <= RESIZE_DOWN_THRESHOLD:
+                    self.__resize(new_size)
                 return True
             collision_count+=1
 
