@@ -39,6 +39,8 @@ class Lookup:
 
     def __compute_load_factor(self) ->float:
         """
+        Load factor will be calculated using the `_occupied_slot_counter` over the length.
+        `_occupied_slot_counter` is used so all items, including the soft deleted are used.
         """
         # Load factor: 𝛼 = n / m
         return self._occupied_slot_counter / self.length
@@ -62,6 +64,10 @@ class Lookup:
 
     
     def __insert(self,buckets:List[Data|None], key:Any, value:Any) -> None:
+        """
+        Inserts a new element in to the table. Resizing will be done of the `RESIZE_UP_THRESHOLD`
+        is exceeded 
+        """
     
         collision_count = 0
         home_location = self.hash(key,collision_count)
@@ -109,6 +115,13 @@ class Lookup:
         
 
     def insert(self, key:Any, value:Any) -> None:
+        """
+        Inserts a new element in to the table. If the `key` already exists,
+        the corresponding item's value will be overriden with the provided `value`
+        args:
+        `key:Any` - The key of the element
+        `value:Any` - The value of the element
+        """
 
         load_factor:float = self.__compute_load_factor()
         if load_factor >= RESIZE_UP_THRESHOLD:
@@ -120,6 +133,8 @@ class Lookup:
     def search (self, key:Any)-> Any | None:
         """
         Gets a value by a specified key.
+        args:
+        `key:Any` - The key of the element to search for
 
         Returns
         -------
